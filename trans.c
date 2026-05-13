@@ -29,14 +29,20 @@ void displayOverdrawnAccounts(FILE *readPtr);
 
 int main(int argc, char *argv[])
 {
-    FILE *cfPtr;         // credit.dat file pointer
+    FILE *cfPtr;         // file pointer
     unsigned int choice; // user's choice
+    const char *fileName = "credit.dat";
+
+    // check if a filename was provided as a command-line argument
+    if (argc >= 2) {
+        fileName = argv[1];
+    }
 
     // fopen opens the file; exits if file cannot be opened
-    if ((cfPtr = fopen("credit.dat", "rb+")) == NULL)
+    if ((cfPtr = fopen(fileName, "rb+")) == NULL)
     {
         // Try creating and initializing the file if it does not exist
-        if ((cfPtr = fopen("credit.dat", "wb+")) == NULL)
+        if ((cfPtr = fopen(fileName, "wb+")) == NULL)
         {
             printf("%s: File could not be opened.\n", argv[0]);
             exit(EXIT_FAILURE);
