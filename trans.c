@@ -120,7 +120,10 @@ void updateRecord(FILE *fPtr)
     // obtain number of account to update
     do {
         printf("%s", "Enter account to update ( 1 - 100 ): ");
-        scanf("%u", &account);
+        if (scanf("%u", &account) != 1) {
+            while (getchar() != '\n'); // clear buffer
+            account = 0;
+        }
     } while (account < 1 || account > 100);
 
     // move file pointer to correct record in file
@@ -138,7 +141,11 @@ void updateRecord(FILE *fPtr)
 
         // request transaction amount from user
         printf("%s", "Enter charge ( + ) or payment ( - ): ");
-        scanf("%lf", &transaction);
+        if (scanf("%lf", &transaction) != 1) {
+            while (getchar() != '\n'); // clear buffer
+            puts("Invalid input. Transaction cancelled.");
+            return;
+        }
         client.balance += transaction; // update record balance
 
         printf("%-6d%-16s%-11s%10.2f\n", client.acctNum, client.lastName, client.firstName, client.balance);
@@ -161,7 +168,10 @@ void deleteRecord(FILE *fPtr)
     // obtain number of account to delete
     do {
         printf("%s", "Enter account number to delete ( 1 - 100 ): ");
-        scanf("%u", &accountNum);
+        if (scanf("%u", &accountNum) != 1) {
+            while (getchar() != '\n'); // clear buffer
+            accountNum = 0;
+        }
     } while (accountNum < 1 || accountNum > 100);
 
     // move file pointer to correct record in file
@@ -192,7 +202,10 @@ void newRecord(FILE *fPtr)
     // obtain number of account to create
     do {
         printf("%s", "Enter new account number ( 1 - 100 ): ");
-        scanf("%u", &accountNum);
+        if (scanf("%u", &accountNum) != 1) {
+            while (getchar() != '\n'); // clear buffer
+            accountNum = 0;
+        }
     } while (accountNum < 1 || accountNum > 100);
 
     // move file pointer to correct record in file
@@ -208,7 +221,11 @@ void newRecord(FILE *fPtr)
     { // create record
         // user enters last name, first name and balance
         printf("%s", "Enter lastname, firstname, balance\n? ");
-        scanf("%14s%9s%lf", client.lastName, client.firstName, &client.balance);
+        if (scanf("%14s%9s%lf", client.lastName, client.firstName, &client.balance) != 3) {
+            while (getchar() != '\n'); // clear buffer
+            puts("Invalid input. Record not created.");
+            return;
+        }
 
         client.acctNum = accountNum;
         // move file pointer to correct record in file
@@ -231,6 +248,9 @@ unsigned int enterChoice(void)
                  "4 - delete an account\n"
                  "5 - end program\n? ");
 
-    scanf("%u", &menuChoice); // receive choice from user
+    if (scanf("%u", &menuChoice) != 1) {
+        while (getchar() != '\n'); // clear buffer
+        menuChoice = 0; // forces default case in switch
+    }
     return menuChoice;
 } // end function enterChoice
