@@ -21,6 +21,7 @@ void newRecord(FILE *fPtr);
 void deleteRecord(FILE *fPtr);
 void displayAllRecords(FILE *readPtr);
 void searchByLastName(FILE *readPtr);
+void resetAllRecords(FILE *fPtr);
 
 int main(int argc, char *argv[])
 {
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
     }
 
     // enable user to specify action
-    while ((choice = enterChoice()) != 7)
+    while ((choice = enterChoice()) != 8)
     {
         switch (choice)
         {
@@ -73,6 +74,10 @@ int main(int argc, char *argv[])
         // search by last name
         case 6:
             searchByLastName(cfPtr);
+            break;
+        // reset all records
+        case 7:
+            resetAllRecords(cfPtr);
             break;
         // display if user does not select valid choice
         default:
@@ -257,7 +262,8 @@ unsigned int enterChoice(void)
                  "4 - delete an account\n"
                  "5 - display all active accounts\n"
                  "6 - search for an account by last name\n"
-                 "7 - end program\n? ");
+                 "7 - reset all accounts to zero\n"
+                 "8 - end program\n? ");
 
     if (scanf("%u", &menuChoice) != 1) {
         while (getchar() != '\n'); // clear buffer
@@ -314,4 +320,29 @@ void searchByLastName(FILE *readPtr)
         printf("No accounts found with last name '%s'.\n", searchName);
     }
     printf("\n");
+}
+
+// reset all accounts to zero
+void resetAllRecords(FILE *fPtr)
+{
+    struct clientData blankClient = {0, "", "", 0.0};
+    char confirm;
+
+    printf("Are you sure you want to reset all accounts? This cannot be undone. (y/n): ");
+    if (scanf(" %c", &confirm) != 1) {
+        while (getchar() != '\n'); // clear buffer
+        puts("Invalid input. Reset cancelled.");
+        return;
+    }
+    
+    if (confirm == 'y' || confirm == 'Y') {
+        rewind(fPtr);
+        for (int i = 0; i < 100; ++i)
+        {
+            fwrite(&blankClient, sizeof(struct clientData), 1, fPtr);
+        }
+        puts("All accounts have been reset to zero.");
+    } else {
+        puts("Reset cancelled.");
+    }
 }
