@@ -26,6 +26,7 @@ void searchByLastName(FILE *readPtr);
 void resetAllRecords(FILE *fPtr);
 void displayTotalBalance(FILE *readPtr);
 void displayOverdrawnAccounts(FILE *readPtr);
+void transferFunds(FILE *fPtr);
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
     }
 
     // enable user to specify action
-    while ((choice = enterChoice()) != 10)
+    while ((choice = enterChoice()) != 11)
     {
         switch (choice)
         {
@@ -96,6 +97,10 @@ int main(int argc, char *argv[])
         // display overdrawn accounts
         case 9:
             displayOverdrawnAccounts(cfPtr);
+            break;
+        // transfer funds
+        case 10:
+            transferFunds(cfPtr);
             break;
         // display if user does not select valid choice
         default:
@@ -283,7 +288,8 @@ unsigned int enterChoice(void)
                  "7 - reset all accounts to zero\n"
                  "8 - display total bank balance\n"
                  "9 - display overdrawn accounts\n"
-                 "10 - end program\n? ");
+                 "10 - transfer funds between accounts\n"
+                 "11 - end program\n? ");
 
     if (scanf("%u", &menuChoice) != 1) {
         while (getchar() != '\n'); // clear buffer
@@ -407,4 +413,86 @@ void displayOverdrawnAccounts(FILE *readPtr)
         printf("No overdrawn accounts found.\n");
     }
     printf("--------------------------\n\n");
+}
+
+// transfer funds between two accounts
+void transferFunds(FILE *fPtr)
+{
+    unsigned int sourceAccount, targetAccount;
+    double transferAmount;
+    struct clientData sourceClient = {0, "", "", 0.0};
+    struct clientData targetClient = {0, "", "", 0.0};
+
+    // get source account
+    do {
+        printf("Enter source account number ( 1 - %d ): ", MAX_ACCOUNTS);
+        if (scanf("%u", &sourceAccount) != 1) {
+            while (getchar() != '\n');
+            sourceAccount = 0;
+        }
+    } while (sourceAccount < 1 || sourceAccount > MAX_ACCOUNTS);
+
+    // read source record
+    fseek(fPtr, (sourceAccount - 1) * sizeof(struct clientData), SEEK_SET);
+    fread(&sourceClient, sizeof(struct clientData), 1, fPtr);
+
+    if (sourceClient.acctNum == 0) {
+        printf("Source account #%u has no information.\n", sourceAccount);
+        return;
+    }
+
+    // get target account
+    do {
+        printf("Enter target account number ( 1 - %d ): ", MAX_ACCOUNTS);
+        if (scanf("%u", &targetAccount) != 1) {
+            while (getchar() != '\n');
+            targetAccount = 0;
+        }
+    } while (targetAccount < 1 || targetAccount > MAX_ACCOUNTS);
+
+    if (sourceAccount == targetAccount) {
+        puts("Cannot transfer funds to the same account.");
+        return;
+    }
+
+    // read target record
+    fseek(fPtr, (targetAccount - 1) * sizeof(struct clientData), SEEK_SET);
+    fread(&targetClient, sizeof(struct clientData), 1, fPtr);
+
+    if (targetClient.acctNum == 0) {
+        printf("Target account #%u has no information.\n", targetAccount);
+        return;
+    }
+
+    // get transfer amount
+    printf("Enter transfer amount: ");
+    if (scanf("%lf", &transferAmount) != 1) {
+        while (getchar() != '\n');
+        puts("Invalid input. Transfer cancelled.");
+        return;
+    }
+
+    if (transferAmount <= 0) {
+        puts("Transfer amount must be greater than zero.");
+        return;
+    }
+
+    if (sourceClient.balance < transferAmount) {
+        printf("Warning: Source account has insufficient funds. Overdrafting...\n");
+    }
+
+    // update balances
+    sourceClient.balance -= transferAmount;
+    targetClient.balance += transferAmount;
+
+    // save source record
+    fseek(fPtr, (sourceClient.acctNum - 1) * sizeof(struct clientData), SEEK_SET);
+    fwrite(&sourceClient, sizeof(struct clientData), 1, fPtr);
+
+    // save target record
+    fseek(fPtr, (targetClient.acctNum - 1) * sizeof(struct clientData), SEEK_SET);
+    fwrite(&targetClient, sizeof(struct clientData), 1, fPtr);
+
+    printf("Successfully transferred $%.2f from account #%u to account #%u.\n", 
+           transferAmount, sourceAccount, targetAccount);
 }
