@@ -3,6 +3,7 @@
 // be placed in the file, and deletes data previously in the file.
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 // clientData structure definition
 struct clientData
 {
@@ -18,6 +19,8 @@ void textFile(FILE *readPtr);
 void updateRecord(FILE *fPtr);
 void newRecord(FILE *fPtr);
 void deleteRecord(FILE *fPtr);
+void displayAllRecords(FILE *readPtr);
+void searchByLastName(FILE *readPtr);
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +46,7 @@ int main(int argc, char *argv[])
     }
 
     // enable user to specify action
-    while ((choice = enterChoice()) != 5)
+    while ((choice = enterChoice()) != 7)
     {
         switch (choice)
         {
@@ -62,6 +65,14 @@ int main(int argc, char *argv[])
         // delete existing record
         case 4:
             deleteRecord(cfPtr);
+            break;
+        // display all records to console
+        case 5:
+            displayAllRecords(cfPtr);
+            break;
+        // search by last name
+        case 6:
+            searchByLastName(cfPtr);
             break;
         // display if user does not select valid choice
         default:
@@ -244,7 +255,9 @@ unsigned int enterChoice(void)
                  "2 - update an account\n"
                  "3 - add a new account\n"
                  "4 - delete an account\n"
-                 "5 - end program\n? ");
+                 "5 - display all active accounts\n"
+                 "6 - search for an account by last name\n"
+                 "7 - end program\n? ");
 
     if (scanf("%u", &menuChoice) != 1) {
         while (getchar() != '\n'); // clear buffer
@@ -252,3 +265,53 @@ unsigned int enterChoice(void)
     }
     return menuChoice;
 } // end function enterChoice
+
+// display all active records to the console
+void displayAllRecords(FILE *readPtr)
+{
+    struct clientData client = {0, "", "", 0.0};
+    
+    rewind(readPtr); // sets pointer to beginning of file
+    printf("\n%-6s%-16s%-11s%10s\n", "Acct", "Last Name", "First Name", "Balance");
+    
+    while (fread(&client, sizeof(struct clientData), 1, readPtr) == 1)
+    {
+        if (client.acctNum != 0)
+        {
+            printf("%-6u%-16s%-11s%10.2f\n", client.acctNum, client.lastName, client.firstName, client.balance);
+        }
+    }
+    printf("\n");
+}
+
+// search for an account by last name
+void searchByLastName(FILE *readPtr)
+{
+    char searchName[15];
+    struct clientData client = {0, "", "", 0.0};
+    int found = 0;
+
+    printf("Enter last name to search for: ");
+    if (scanf("%14s", searchName) != 1) {
+        while (getchar() != '\n');
+        puts("Invalid input.");
+        return;
+    }
+
+    rewind(readPtr); // sets pointer to beginning of file
+    printf("\n%-6s%-16s%-11s%10s\n", "Acct", "Last Name", "First Name", "Balance");
+
+    while (fread(&client, sizeof(struct clientData), 1, readPtr) == 1)
+    {
+        if (client.acctNum != 0 && strcmp(client.lastName, searchName) == 0)
+        {
+            printf("%-6u%-16s%-11s%10.2f\n", client.acctNum, client.lastName, client.firstName, client.balance);
+            found = 1;
+        }
+    }
+    
+    if (!found) {
+        printf("No accounts found with last name '%s'.\n", searchName);
+    }
+    printf("\n");
+}
