@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define MAX_ACCOUNTS 100
 // clientData structure definition
 struct clientData
 {
@@ -39,7 +41,7 @@ int main(int argc, char *argv[])
         }
 
         struct clientData blankClient = {0, "", "", 0.0};
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < MAX_ACCOUNTS; ++i)
         {
             fwrite(&blankClient, sizeof(struct clientData), 1, cfPtr);
         }
@@ -133,12 +135,12 @@ void updateRecord(FILE *fPtr)
 
     // obtain number of account to update
     do {
-        printf("%s", "Enter account to update ( 1 - 100 ): ");
+        printf("Enter account to update ( 1 - %d ): ", MAX_ACCOUNTS);
         if (scanf("%u", &account) != 1) {
             while (getchar() != '\n'); // clear buffer
             account = 0;
         }
-    } while (account < 1 || account > 100);
+    } while (account < 1 || account > MAX_ACCOUNTS);
 
     // move file pointer to correct record in file
     fseek(fPtr, (account - 1) * sizeof(struct clientData), SEEK_SET);
@@ -181,12 +183,12 @@ void deleteRecord(FILE *fPtr)
 
     // obtain number of account to delete
     do {
-        printf("%s", "Enter account number to delete ( 1 - 100 ): ");
+        printf("Enter account number to delete ( 1 - %d ): ", MAX_ACCOUNTS);
         if (scanf("%u", &accountNum) != 1) {
             while (getchar() != '\n'); // clear buffer
             accountNum = 0;
         }
-    } while (accountNum < 1 || accountNum > 100);
+    } while (accountNum < 1 || accountNum > MAX_ACCOUNTS);
 
     // move file pointer to correct record in file
     fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
@@ -215,12 +217,12 @@ void newRecord(FILE *fPtr)
 
     // obtain number of account to create
     do {
-        printf("%s", "Enter new account number ( 1 - 100 ): ");
+        printf("Enter new account number ( 1 - %d ): ", MAX_ACCOUNTS);
         if (scanf("%u", &accountNum) != 1) {
             while (getchar() != '\n'); // clear buffer
             accountNum = 0;
         }
-    } while (accountNum < 1 || accountNum > 100);
+    } while (accountNum < 1 || accountNum > MAX_ACCOUNTS);
 
     // move file pointer to correct record in file
     fseek(fPtr, (accountNum - 1) * sizeof(struct clientData), SEEK_SET);
@@ -337,7 +339,7 @@ void resetAllRecords(FILE *fPtr)
     
     if (confirm == 'y' || confirm == 'Y') {
         rewind(fPtr);
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < MAX_ACCOUNTS; ++i)
         {
             fwrite(&blankClient, sizeof(struct clientData), 1, fPtr);
         }
