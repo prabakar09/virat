@@ -24,6 +24,8 @@ void deleteRecord(FILE *fPtr);
 void displayAllRecords(FILE *readPtr);
 void searchByLastName(FILE *readPtr);
 void resetAllRecords(FILE *fPtr);
+void displayTotalBalance(FILE *readPtr);
+void displayOverdrawnAccounts(FILE *readPtr);
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +51,7 @@ int main(int argc, char *argv[])
     }
 
     // enable user to specify action
-    while ((choice = enterChoice()) != 8)
+    while ((choice = enterChoice()) != 10)
     {
         switch (choice)
         {
@@ -80,6 +82,14 @@ int main(int argc, char *argv[])
         // reset all records
         case 7:
             resetAllRecords(cfPtr);
+            break;
+        // display total balance
+        case 8:
+            displayTotalBalance(cfPtr);
+            break;
+        // display overdrawn accounts
+        case 9:
+            displayOverdrawnAccounts(cfPtr);
             break;
         // display if user does not select valid choice
         default:
@@ -265,7 +275,9 @@ unsigned int enterChoice(void)
                  "5 - display all active accounts\n"
                  "6 - search for an account by last name\n"
                  "7 - reset all accounts to zero\n"
-                 "8 - end program\n? ");
+                 "8 - display total bank balance\n"
+                 "9 - display overdrawn accounts\n"
+                 "10 - end program\n? ");
 
     if (scanf("%u", &menuChoice) != 1) {
         while (getchar() != '\n'); // clear buffer
@@ -347,4 +359,46 @@ void resetAllRecords(FILE *fPtr)
     } else {
         puts("Reset cancelled.");
     }
+}
+
+// display total balance of all accounts
+void displayTotalBalance(FILE *readPtr)
+{
+    struct clientData client = {0, "", "", 0.0};
+    double totalBalance = 0.0;
+    
+    rewind(readPtr);
+    while (fread(&client, sizeof(struct clientData), 1, readPtr) == 1)
+    {
+        if (client.acctNum != 0)
+        {
+            totalBalance += client.balance;
+        }
+    }
+    printf("\nTotal balance of all active accounts: %.2f\n\n", totalBalance);
+}
+
+// display accounts with a negative balance
+void displayOverdrawnAccounts(FILE *readPtr)
+{
+    struct clientData client = {0, "", "", 0.0};
+    int found = 0;
+    
+    rewind(readPtr);
+    printf("\n--- Overdrawn Accounts ---\n");
+    printf("%-6s%-16s%-11s%10s\n", "Acct", "Last Name", "First Name", "Balance");
+    
+    while (fread(&client, sizeof(struct clientData), 1, readPtr) == 1)
+    {
+        if (client.acctNum != 0 && client.balance < 0)
+        {
+            printf("%-6u%-16s%-11s%10.2f\n", client.acctNum, client.lastName, client.firstName, client.balance);
+            found = 1;
+        }
+    }
+    
+    if (!found) {
+        printf("No overdrawn accounts found.\n");
+    }
+    printf("--------------------------\n\n");
 }
