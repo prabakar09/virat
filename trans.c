@@ -27,6 +27,7 @@ void resetAllRecords(FILE *fPtr);
 void displayTotalBalance(FILE *readPtr);
 void displayOverdrawnAccounts(FILE *readPtr);
 void transferFunds(FILE *fPtr);
+void applyInterest(FILE *fPtr);
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
     }
 
     // enable user to specify action
-    while ((choice = enterChoice()) != 11)
+    while ((choice = enterChoice()) != 12)
     {
         switch (choice)
         {
@@ -101,6 +102,10 @@ int main(int argc, char *argv[])
         // transfer funds
         case 10:
             transferFunds(cfPtr);
+            break;
+        // apply interest
+        case 11:
+            applyInterest(cfPtr);
             break;
         // display if user does not select valid choice
         default:
@@ -289,7 +294,8 @@ unsigned int enterChoice(void)
                  "8 - display total bank balance\n"
                  "9 - display overdrawn accounts\n"
                  "10 - transfer funds between accounts\n"
-                 "11 - end program\n? ");
+                 "11 - apply interest to all accounts\n"
+                 "12 - end program\n? ");
 
     if (scanf("%u", &menuChoice) != 1) {
         while (getchar() != '\n'); // clear buffer
@@ -495,4 +501,47 @@ void transferFunds(FILE *fPtr)
 
     printf("Successfully transferred $%.2f from account #%u to account #%u.\n", 
            transferAmount, sourceAccount, targetAccount);
+}
+
+// apply interest to all accounts with positive balances
+void applyInterest(FILE *fPtr)
+{
+    struct clientData client = {0, "", "", 0.0};
+    double interestRate;
+    int updatedCount = 0;
+
+    printf("Enter interest rate percentage (e.g., 5.5 for 5.5%%): ");
+    if (scanf("%lf", &interestRate) != 1) {
+        while (getchar() != '\n');
+        puts("Invalid input. Cancelled.");
+        return;
+    }
+
+    if (interestRate <= 0) {
+        puts("Interest rate must be greater than zero.");
+        return;
+    }
+
+    rewind(fPtr);
+    
+    // Iterate through all records
+    while (fread(&client, sizeof(struct clientData), 1, fPtr) == 1)
+    {
+        if (client.acctNum != 0 && client.balance > 0)
+        {
+            // Apply interest
+            client.balance += client.balance * (interestRate / 100.0);
+            
+            // Move pointer back to overwrite this record
+            fseek(fPtr, -(long)sizeof(struct clientData), SEEK_CUR);
+            fwrite(&client, sizeof(struct clientData), 1, fPtr);
+            
+            // fseek is required between write and read
+            fseek(fPtr, 0, SEEK_CUR);
+            
+            updatedCount++;
+        }
+    }
+    
+    printf("Successfully applied %.2f%% interest to %d accounts.\n", interestRate, updatedCount);
 }
